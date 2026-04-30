@@ -27,12 +27,14 @@ function App() {
   // エピソード詳細
   const [selectedEpisode, setSelectedEpisode] = useState(null);
 
+  // 編集中のエピソードID
+  const [editId, setEditId] = useState(null);
 
   // 入力フォーム
   if (screen === "form") {
     return (
       <div>
-        <h1>エピソード入力</h1>
+        <h1>{editId === null ? "エピソード入力" : "エピソード編集"}</h1>
 
         <span>日付</span>
         <br />
@@ -98,18 +100,31 @@ function App() {
         ))}
         <br />
         <button onClick={() => {
-          setEpisodes([...episodes,
-             { 
-              id: Date.now(),
-              date,
-              title,
-              detail,
-              emotion,
-              strength,
-              questions,
-              answers
-            }
-          ]);
+          const newEpisode = {
+            id: editId === null ? Date.now() : editId,
+            date,
+            title,
+            detail,
+            emotion,
+            strength,
+            questions,
+            answers
+          };
+
+          if (editId === null) {
+            // エピソード新規追加
+            setEpisodes([...episodes, newEpisode]);
+          } else {
+            // エピソード編集保存
+            const updateEpisodes = episodes.map((episode) =>
+              episode.id === editId ? newEpisode : episode
+            );
+            
+            setEpisodes(updateEpisodes);
+
+          }
+          
+          setEditId(null);
           setDate("");
           setTitle("");
           setDetail("");
@@ -117,7 +132,8 @@ function App() {
           setStrength(5);
           setAnswers(Array(questions.length).fill(""));
           setScreen("list");
-        }}>保存</button>
+        }}>
+          {editId === null ? "保存" : "更新"}</button>
       </div>
     )
   };
@@ -170,6 +186,16 @@ function App() {
               {episode.title}
               </h3>
               <p>{episode.date}</p>
+              <button onClick={() => {
+                setEditId(episode.id);
+                setDate(episode.date);
+                setTitle(episode.title);
+                setDetail(episode.detail);
+                setEmotion(episode.emotion);
+                setStrength(episode.strength);
+                setAnswers(episode.answers);
+                setScreen("form");
+              }}>編集</button>
               <button onClick={() => {
                 const newEpisodes = episodes.filter((item) => item.id !== episode.id);
                 setEpisodes(newEpisodes);
