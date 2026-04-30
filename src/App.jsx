@@ -99,8 +99,17 @@ function App() {
         <br />
         <button onClick={() => {
           setEpisodes([...episodes,
-             { date, title, detail, emotion, strength, questions, answers }
-            ]);
+             { 
+              id: Date.now(),
+              date,
+              title,
+              detail,
+              emotion,
+              strength,
+              questions,
+              answers
+            }
+          ]);
           setDate("");
           setTitle("");
           setDetail("");
@@ -143,12 +152,13 @@ function App() {
       <button onClick={() => setScreen("form")}>新規エピソード</button>
 
       <h1>エピソード一覧</h1>
-      {episodes.length === 0 ? ( <p>エピソードがありません</p>
+      {episodes.length === 0 ? (
+         <p>エピソードがありません</p>
       ) : (
         [...episodes]
           .sort((a, b) => new Date(b.date) - new Date(a.date))
-          .map((episode, index) => (
-            <div key={index}>
+          .map((episode) => (
+            <div key={episode.id}>
               <h3 
                 onClick={() => {
                   setSelectedEpisode(episode);
@@ -160,6 +170,10 @@ function App() {
               {episode.title}
               </h3>
               <p>{episode.date}</p>
+              <button onClick={() => {
+                const newEpisodes = episodes.filter((item) => item.id !== episode.id);
+                setEpisodes(newEpisodes);
+              }}>削除</button>
             </div>
           ))
       )}
