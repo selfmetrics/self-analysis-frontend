@@ -1,5 +1,6 @@
 import { useState } from "react";
 import EpisodeList from "./components/EpisodeList";
+import EpisodeForm from "./components/EpisodeForm";
 
 function App() {
   // 画面切り替え用
@@ -31,7 +32,9 @@ function App() {
   // 編集中のエピソードID
   const [editId, setEditId] = useState(null);
 
-  const handleNew = () => {
+
+
+  const resetForm = () => {
     setEditId(null);
     setDate("");
     setTitle("");
@@ -39,7 +42,36 @@ function App() {
     setEmotion("positive");
     setStrength(5);
     setAnswers(Array(questions.length).fill(""));
+  };
+
+  const handleNew = () => {
+    resetForm();
     setScreen("form");
+  };
+
+  const handleSave = () => {
+    const newEpisode = {
+      id: editId === null ? Date.now() : editId,
+      date,
+      title,
+      detail,
+      emotion,
+      strength,
+      questions,
+      answers,
+    };
+
+    if (editId === null) {
+      setEpisodes([...episodes, newEpisode]);
+    } else {
+      const updatedEpisodes = episodes.map((episode) =>
+        episode.id === editId ? newEpisode : episode
+      );
+      setEpisodes(updatedEpisodes);
+    }
+
+    resetForm();
+    setScreen("list");
   };
 
   const handleSelect = (episode) => {
@@ -66,108 +98,24 @@ function App() {
   // 入力フォーム
   if (screen === "form") {
     return (
-      <div>
-        <h1>{editId === null ? "エピソード入力" : "エピソード編集"}</h1>
-
-        <span>日付</span>
-        <br />
-        <input 
-          type="date"
-          value={date}
-          onChange={(e) => setDate(e.target.value)}
-        />
-        <br />
-
-        <span>タイトル</span>
-        <br />
-        <input
-          type="text"
-          placeholder="タイトル"
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
-        />
-        <br />
-
-        <span>詳細</span>
-        <br />
-        <input
-          type="text"
-          placeholder="詳細"
-          value={detail}
-          onChange={(e) => setDetail(e.target.value)}
-        />
-        <br />
-
-        <span>感情</span>
-        <br />
-        <button onClick={() => setEmotion("positive")}>
-          ポジティブ😊
-        </button>
-        <button onClick={() => setEmotion("negative")}>
-          ネガティブ😢
-        </button>
-
-        <p>強度: {strength}</p>
-        <input
-          type="range"
-          min="1"
-          max="10"
-          value={strength}
-          onChange={(e) => setStrength(e.target.value)}
-        />
-
-        <p>深堀質問</p>
-        {questions.map((q, index) => (
-          <div key={index}>
-            <p>{q}</p>
-            <input
-             type="text"
-             placeholder="回答を入力"
-             value={answers[index]}
-             onChange={(e) => {
-               const newAnswers = [...answers];
-               newAnswers[index] = e.target.value;
-               setAnswers(newAnswers);
-             }} />
-          </div>
-        ))}
-        <br />
-        <button onClick={() => {
-          const newEpisode = {
-            id: editId === null ? Date.now() : editId,
-            date,
-            title,
-            detail,
-            emotion,
-            strength,
-            questions,
-            answers
-          };
-
-          if (editId === null) {
-            // エピソード新規追加
-            setEpisodes([...episodes, newEpisode]);
-          } else {
-            // エピソード編集保存
-            const updateEpisodes = episodes.map((episode) =>
-              episode.id === editId ? newEpisode : episode
-            );
-            
-            setEpisodes(updateEpisodes);
-
-          }
-          
-          setEditId(null);
-          setDate("");
-          setTitle("");
-          setDetail("");
-          setEmotion("positive");
-          setStrength(5);
-          setAnswers(Array(questions.length).fill(""));
-          setScreen("list");
-        }}>
-          {editId === null ? "保存" : "更新"}</button>
-      </div>
+      <EpisodeForm
+        editId={editId}
+        date={date}
+        setDate={setDate}
+        title={title}
+        setTitle={setTitle}
+        detail={detail}
+        setDetail={setDetail}
+        emotion={emotion}
+        setEmotion={setEmotion}
+        strength={strength}
+        setStrength={setStrength}
+        questions={questions}
+        answers={answers}
+        setAnswers={setAnswers}
+        onSave={handleSave}
+        onBack={() => setScreen("list")}
+      />
     )
   };
 
