@@ -1,6 +1,7 @@
 import { useState } from "react";
 import EpisodeList from "./components/EpisodeList";
 import EpisodeForm from "./components/EpisodeForm";
+import EpisodeDetail from "./components/EpisodeDetail";
 
 function App() {
   // 画面切り替え用
@@ -27,13 +28,13 @@ function App() {
   const [episodes, setEpisodes] = useState([]);
 
   // エピソード詳細
-  const [selectedEpisode, setSelectedEpisode] = useState(null);
+  const [detailEpisode, setDetailEpisode] = useState(null);
 
   // 編集中のエピソードID
   const [editId, setEditId] = useState(null);
 
 
-
+  // フォームの入力内容を初期状態に戻す関数
   const resetForm = () => {
     setEditId(null);
     setDate("");
@@ -44,13 +45,20 @@ function App() {
     setAnswers(Array(questions.length).fill(""));
   };
 
+  // 新規エピソード作成ボタンを押したときの処理
   const handleNew = () => {
+    // 前回の入力内容や編集状態をリセットする
     resetForm();
+    // 入力フォーム画面に切り替える
     setScreen("form");
   };
 
+  // 保存ボタンを押したときの処理
   const handleSave = () => {
+    // 入力された内容を1つのエピソードデータとしてまとめる
     const newEpisode = {
+      // 新規作成なら現在時刻をIDにする
+      // 編集中なら元のIDをそのまま使う
       id: editId === null ? Date.now() : editId,
       date,
       title,
@@ -61,37 +69,51 @@ function App() {
       answers,
     };
 
+    // editId が null の場合は新規追加
     if (editId === null) {
       setEpisodes([...episodes, newEpisode]);
     } else {
+      // editId がある場合は編集保存
       const updatedEpisodes = episodes.map((episode) =>
+        // 編集対象のIDと一致するエピソードだけ newEpisode に置き換える
         episode.id === editId ? newEpisode : episode
       );
+      // 更新後のエピソード一覧を保存する
       setEpisodes(updatedEpisodes);
     }
 
+    // 保存後、フォームをリセットする
     resetForm();
+    // 一覧画面に戻る
     setScreen("list");
   };
 
-  const handleSelect = (episode) => {
-    setSelectedEpisode(episode);
+  // 一覧からエピソードをクリックしたときの処理
+  const handleDetail = (episode) => {
+    setDetailEpisode(episode);
     setScreen("detail");
   };
 
+  // 編集ボタンを押したときの処理
   const handleEdit = (episode) => {
+    // 編集対象のIDを保存する
     setEditId(episode.id);
+    // 選択したエピソードの内容をフォームにセットする
     setDate(episode.date);
     setTitle(episode.title);
     setDetail(episode.detail);
     setEmotion(episode.emotion);
     setStrength(episode.strength);
     setAnswers(episode.answers);
+    // 入力フォーム画面に切り替える
     setScreen("form");
   };
 
+  // 削除ボタンを押したときの処理
   const handleDelete = (id) => {
+    // 削除対象のIDと一致しないエピソードだけを残す
     const newEpisodes = episodes.filter((episode) => episode.id !== id);
+    // 削除後のエピソード一覧を保存する
     setEpisodes(newEpisodes);
   };
 
@@ -122,23 +144,10 @@ function App() {
   // 詳細画面
   if (screen === "detail") {
     return (
-      <div>
-        <button onClick={() => setScreen("list")}>戻る</button>
-      
-        <h1>{selectedEpisode.title}</h1>
-        <p>日付:{selectedEpisode.date}</p>
-        <p>詳細:{selectedEpisode.detail}</p>
-        <p>感情:{selectedEpisode.emotion}</p>
-        <p>強度:{selectedEpisode.strength}</p>
-
-        <h2>深堀質問</h2>
-        {selectedEpisode.questions.map((q, index) => (
-          <div key={index}>
-            <p>{q}</p>
-            <p>{selectedEpisode.answers[index]}</p>
-          </div>
-        ))}
-      </div>
+      <EpisodeDetail
+        episode={detailEpisode}
+        onBack={() => setScreen("list")} 
+      />
     );
   }
 
@@ -147,7 +156,7 @@ function App() {
       <EpisodeList
         episodes={episodes}
         onNew={handleNew}
-        onSelect={handleSelect}
+        onDetail={handleDetail}
         onEdit={handleEdit}
         onDelete={handleDelete}
       />
