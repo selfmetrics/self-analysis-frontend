@@ -1,4 +1,5 @@
-import React, { useState } from "react";
+import { useState } from "react";
+import EpisodeList from "./components/EpisodeList";
 
 function App() {
   // 画面切り替え用
@@ -29,6 +30,38 @@ function App() {
 
   // 編集中のエピソードID
   const [editId, setEditId] = useState(null);
+
+  const handleNew = () => {
+    setEditId(null);
+    setDate("");
+    setTitle("");
+    setDetail("");
+    setEmotion("positive");
+    setStrength(5);
+    setAnswers(Array(questions.length).fill(""));
+    setScreen("form");
+  };
+
+  const handleSelect = (episode) => {
+    setSelectedEpisode(episode);
+    setScreen("detail");
+  };
+
+  const handleEdit = (episode) => {
+    setEditId(episode.id);
+    setDate(episode.date);
+    setTitle(episode.title);
+    setDetail(episode.detail);
+    setEmotion(episode.emotion);
+    setStrength(episode.strength);
+    setAnswers(episode.answers);
+    setScreen("form");
+  };
+
+  const handleDelete = (id) => {
+    const newEpisodes = episodes.filter((episode) => episode.id !== id);
+    setEpisodes(newEpisodes);
+  };
 
   // 入力フォーム
   if (screen === "form") {
@@ -163,47 +196,13 @@ function App() {
 
   // 一覧画面
     return (
-       <div>
-      <h1>自己分析ノート</h1>
-      <button onClick={() => setScreen("form")}>新規エピソード</button>
-
-      <h1>エピソード一覧</h1>
-      {episodes.length === 0 ? (
-         <p>エピソードがありません</p>
-      ) : (
-        [...episodes]
-          .sort((a, b) => new Date(b.date) - new Date(a.date))
-          .map((episode) => (
-            <div key={episode.id}>
-              <h3 
-                onClick={() => {
-                  setSelectedEpisode(episode);
-                  setScreen("detail");
-                }}>
-              {episode.emotion === "positive" ? "😊" : "😢"}
-              {episode.strength} 
-              <br />
-              {episode.title}
-              </h3>
-              <p>{episode.date}</p>
-              <button onClick={() => {
-                setEditId(episode.id);
-                setDate(episode.date);
-                setTitle(episode.title);
-                setDetail(episode.detail);
-                setEmotion(episode.emotion);
-                setStrength(episode.strength);
-                setAnswers(episode.answers);
-                setScreen("form");
-              }}>編集</button>
-              <button onClick={() => {
-                const newEpisodes = episodes.filter((item) => item.id !== episode.id);
-                setEpisodes(newEpisodes);
-              }}>削除</button>
-            </div>
-          ))
-      )}
-      </div>
+      <EpisodeList
+        episodes={episodes}
+        onNew={handleNew}
+        onSelect={handleSelect}
+        onEdit={handleEdit}
+        onDelete={handleDelete}
+      />
     );
   };
 
