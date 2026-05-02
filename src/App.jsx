@@ -1,4 +1,6 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { getEpisodes } from "./api/episodesApi";
+import { getEpisodeById } from "./api/episodesApi";
 import EpisodeList from "./components/EpisodeList";
 import EpisodeForm from "./components/EpisodeForm";
 import EpisodeDetail from "./components/EpisodeDetail";
@@ -27,12 +29,46 @@ function App() {
   // 保存されたエピソード一覧
   const [episodes, setEpisodes] = useState([]);
 
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+
   // エピソード詳細
   const [detailEpisode, setDetailEpisode] = useState(null);
 
   // 編集中のエピソードID
   const [editId, setEditId] = useState(null);
 
+  // アプリ起動時にエピソード一覧をAPIから取得する
+  useEffect(() => {
+    const fetchEpisodes = async () => {
+      
+      try {
+        setLoading(true);
+        setError("");
+        
+        const data = await getEpisodes();
+
+        const convertedEpisodes = data.map((episode) => ({
+           id: episode.id,
+           date: episode.date,
+           title: episode.title,
+           detail: episode.content ?? "",
+           emotion: episode.emotion === "happy" ? "positive" : "negative",
+           strength: episode.emotionIntensity,
+           questions: [],
+           answers: [],
+          }));
+        setEpisodes(convertedEpisodes);
+      } catch (err) {
+        console.error(err);
+        setError(err.message);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchEpisodes();
+  }, []);
 
   // フォームの入力内容を初期状態に戻す関数
   const resetForm = () => {
@@ -150,6 +186,15 @@ function App() {
       />
     );
   }
+
+  if (loading) {
+    return <p>読み込み中...</p>;
+  } 
+
+  if (error) {
+    return <p>{error}</p>;
+  }
+
 
   // 一覧画面
     return (
