@@ -1,4 +1,4 @@
-function EpisodeList({ episodes, onNew, onSelect, onEdit, onDelete }) {
+function EpisodeList({ episodes, onNew, onDetail, onEdit, onDelete }) {
     return (
         <div>
             <h1>自己分析ノート</h1>
@@ -13,7 +13,7 @@ function EpisodeList({ episodes, onNew, onSelect, onEdit, onDelete }) {
                     .sort((a, b) => new Date(b.date) - new Date(a.date))
                     .map((episode) => (
                         <div key={episode.id}>
-                            <h3 onClick={() => onSelect(episode)}>
+                            <h3 onClick={() => onDetail(episode)}>
                                 {episode.emotion === "positive" ? "😊" : "😢"}
                                 {episode.strength}
                                 <br />
