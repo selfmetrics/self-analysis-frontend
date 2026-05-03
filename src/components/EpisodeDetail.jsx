@@ -4,16 +4,16 @@ function EpisodeDetail({ episode, onBack }) {
     }
 
     const questions = episode.questions || [];
-    const answers = episode.answers || [];
 
     return (
         <div>
             <button onClick={onBack}>戻る</button>
+
             <h1>日付: {episode.date}</h1>
             <p>タイトル: {episode.title}</p>
-            <p>詳細: {episode.content}</p>
+            <p>詳細: {episode.content ?? episode.detail}</p>
             <p>感情: {episode.emotion}</p>
-            <p>強度: {episode.emotionIntensity}</p>
+            <p>強度: {episode.emotionIntensity ?? episode.strength}</p>
 
             <h2>深堀質問と回答</h2>
 
@@ -21,9 +21,9 @@ function EpisodeDetail({ episode, onBack }) {
                 <p>質問と回答がありません</p>
             ) : (
                 questions.map((q, index) => (
-                    <div key={index}>
-                        <p>{q}</p>
-                        <p>{answers[index]}</p>
+                    <div key={q.id ?? index}>
+                        <p>質問: {q.question}</p>
+                        <p>回答: {q.answer || "未回答"}</p>
                     </div>
                 ))
             )}
