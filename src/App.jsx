@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
-import { getEpisodes } from "./api/episodesApi";
-import { getEpisodeById } from "./api/episodesApi";
+import { getEpisodes, getEpisodeById } from "./api/episodesApi";
 import EpisodeList from "./components/EpisodeList";
 import EpisodeForm from "./components/EpisodeForm";
 import EpisodeDetail from "./components/EpisodeDetail";
@@ -40,32 +39,10 @@ function App() {
 
   // アプリ起動時にエピソード一覧をAPIから取得する
   useEffect(() => {
-    const fetchEpisodes = async () => {
-      
-      try {
-        setLoading(true);
-        setError("");
-        
-        const data = await getEpisodes();
-
-        const convertedEpisodes = data.map((episode) => ({
-           id: episode.id,
-           date: episode.date,
-           title: episode.title,
-           detail: episode.content ?? "",
-           emotion: episode.emotion === "happy" ? "positive" : "negative",
-           strength: episode.emotionIntensity,
-           questions: [],
-           answers: [],
-          }));
-        setEpisodes(convertedEpisodes);
-      } catch (err) {
-        console.error(err);
-        setError(err.message);
-      } finally {
-        setLoading(false);
-      }
-    };
+  const fetchEpisodes = async () => {
+    const data = await getEpisodes();
+    setEpisodes(data);
+  };
 
     fetchEpisodes();
   }, []);
@@ -125,8 +102,17 @@ function App() {
   };
 
   // 一覧からエピソードをクリックしたときの処理
-  const handleDetail = (episode) => {
-    setDetailEpisode(episode);
+  const handleDetail = async (episode) => {
+    const data = await getEpisodeById(episode.id);
+
+    setDetailEpisode({
+      id: data.id,
+      date: data.date,
+      title: data.title,
+      detail: data.content ?? "",
+      emotion: data.emotion,
+      strength: data.emotionIntensity,
+    });
     setScreen("detail");
   };
 
