@@ -1,4 +1,4 @@
-function EpisodeList({ episodes, onNew, onDetail, onEdit, onDelete }) {
+function EpisodeList({ episodes = [], onNew, onDetail, onEdit, onDelete }) {
     return (
         <div>
             <h1>自己分析ノート</h1>
@@ -6,7 +6,9 @@ function EpisodeList({ episodes, onNew, onDetail, onEdit, onDelete }) {
 
             <h1>エピソード一覧</h1>
 
-            {episodes.length === 0 ? (
+            {!Array.isArray(episodes) ? (
+                <p>エピソードを取得できませんでした</p>
+            ) : episodes.length === 0 ? (
                 <p>エピソードがありません</p>
             ) : (
                 [...episodes]
@@ -14,8 +16,8 @@ function EpisodeList({ episodes, onNew, onDetail, onEdit, onDelete }) {
                     .map((episode) => (
                         <div key={episode.id}>
                             <h3 onClick={() => onDetail(episode)}>
-                                {episode.emotion === "positive" ? "😊" : "😢"}
-                                {episode.strength}
+                                {episode.emotion === "happy" ? "😊" : "😢"}
+                                {episode.emotionIntensity}
                                 <br />
                                 {episode.title}
                             </h3>
@@ -25,7 +27,7 @@ function EpisodeList({ episodes, onNew, onDetail, onEdit, onDelete }) {
                             <button onClick={() => onDelete(episode.id)}>削除</button>
                         </div>
                     ))
-                )}
+            )}
         </div>
     );
 }
