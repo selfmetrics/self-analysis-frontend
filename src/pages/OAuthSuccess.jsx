@@ -1,62 +1,62 @@
-//→ URLのtokenを受け取る
-//→ localStorageに保存する
-//→ /users/me でユーザー情報を取得する
-//→ App.jsx に user を渡す
-//→ navigate("/") でメイン画面へ移動する
-
 import { useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { getLoginUser } from "../api/authApi";
+
+// getLoginUser() の返し方が fetch / axios / user単体 どれでも対応できるようにする
+const extractUser = (response) => {
+  return (
+    response?.data?.data ??
+    response?.data?.user ??
+    response?.user ??
+    response?.data ??
+    response ??
+    null
+  );
+};
 
 function OAuthSuccess({ onLoginSuccess }) {
   const navigate = useNavigate();
   const isRequestSent = useRef(false);
 
   useEffect(() => {
-    const handleOAuthSuccess = async () => {
+    const login = async () => {
       if (isRequestSent.current) return;
       isRequestSent.current = true;
 
       try {
         const params = new URLSearchParams(window.location.search);
-        const tokenFromUrl = params.get("token");
+        const token = params.get("token");
 
-        console.log("OAuthSuccess token:", tokenFromUrl);
-
-        if (!tokenFromUrl) {
+        if (!token) {
           throw new Error("token がありません");
         }
 
-        // URLから受け取った token を保存
-        localStorage.setItem("token", tokenFromUrl);
+        localStorage.setItem("token", token);
 
-        // token を使ってログインユーザー情報を取得
-        const loginUser = await getLoginUser();
-        console.log("loginUser:", loginUser);
+        const response = await getLoginUser();
+        const userData = extractUser(response);
 
-        const user =
-          loginUser.data?.user ??
-          loginUser.data ??
-          loginUser.user ??
-          loginUser;
+        console.log("OAuthSuccess response:", response);
+        console.log("OAuthSuccess userData:", userData);
 
-        // App.jsx に user 情報を渡す
-        onLoginSuccess(user);
+        if (!userData) {
+          throw new Error("ユーザー情報を取得できませんでした");
+        }
 
-        // メイン画面へ移動
+        onLoginSuccess(userData);
+
         navigate("/", { replace: true });
       } catch (error) {
         console.error("OAuthログイン処理エラー:", error);
-
         localStorage.removeItem("token");
         navigate("/", { replace: true });
       }
     };
 
-    handleOAuthSuccess();
+    login();
   }, [navigate, onLoginSuccess]);
 
-  return <p>Googleログイン処理中...</p>;
+  return <p>ログイン処理中...</p>;
 }
 
 export default OAuthSuccess;
