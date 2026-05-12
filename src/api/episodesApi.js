@@ -1,4 +1,6 @@
-const API_BASE_URL = "http://localhost:3000";
+import axios from "axios";
+
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
 const getHeaders = () => {
   const token = localStorage.getItem("token");
@@ -6,113 +8,119 @@ const getHeaders = () => {
   return {
     "Content-Type": "application/json",
     Accept: "application/json",
-    Authorization: `Bearer ${token}`,
+    ...(token && { Authorization: `Bearer ${token}` }),
   };
 };
 
-const parseResponse = async (response) => {
-  const text = await response.text();
-
+const logResponse = (response) => {
   console.log("APIステータス:", response.status);
-  console.log("APIレスポンス:", text);
-
-  if (!text) return null;
-
-  return JSON.parse(text);
+  console.log("APIレスポンス:", response.data);
 };
 
 // エピソード一覧
 const getEpisodes = async () => {
-  const response = await fetch(`${API_BASE_URL}/episodes`, {
-    method: "GET",
+  const response = await axios.get(`${API_BASE_URL}/episodes`, {
     headers: getHeaders(),
   });
 
-  return await parseResponse(response);
+  logResponse(response);
+  return response.data;
 };
 
 // エピソード詳細
 const getEpisodeById = async (id) => {
-  const response = await fetch(`${API_BASE_URL}/episodes/${id}`, {
-    method: "GET",
+  const response = await axios.get(`${API_BASE_URL}/episodes/${id}`, {
     headers: getHeaders(),
   });
 
-  return await parseResponse(response);
+  logResponse(response);
+  return response.data;
 };
 
 // 基本質問生成
-const createBasicQuestions = async () => {
-  const response = await fetch(`${API_BASE_URL}/episodes`, {
-    method: "POST",
-    headers: getHeaders(),
-    body: JSON.stringify({
+const createBasicQuestions = async (episodeId) => {
+  const response = await axios.post(
+    `${API_BASE_URL}/episodes/${episodeId}/questions`,
+    {
       type: "default",
-    }),
-  });
+    },
+    {
+      headers: getHeaders(),
+    }
+  );
 
-  return await parseResponse(response);
+  logResponse(response);
+  return response.data;
 };
 
 // エピソード + 質問 + 回答を一括保存
 const completeEpisode = async (id, episodeData) => {
-  const response = await fetch(`${API_BASE_URL}/episodes/${id}/complete`, {
-    method: "POST",
-    headers: getHeaders(),
-    body: JSON.stringify(episodeData),
-  });
+  const response = await axios.post(
+    `${API_BASE_URL}/episodes/${id}/complete`,
+    episodeData,
+    {
+      headers: getHeaders(),
+    }
+  );
 
-  return await parseResponse(response);
+  logResponse(response);
+  return response.data;
 };
 
 // エピソード編集
 const updateEpisode = async (id, episodeData) => {
-  const response = await fetch(`${API_BASE_URL}/episodes/${id}`, {
-    method: "PATCH",
-    headers: getHeaders(),
-    body: JSON.stringify(episodeData),
-  });
+  const response = await axios.patch(
+    `${API_BASE_URL}/episodes/${id}`,
+    episodeData,
+    {
+      headers: getHeaders(),
+    }
+  );
 
-  return await parseResponse(response);
+  logResponse(response);
+  return response.data;
 };
 
 // 質問の回答編集
 const updateAnswer = async (episodeId, questionId, answer) => {
-  const response = await fetch(
+  const response = await axios.patch(
     `${API_BASE_URL}/episodes/${episodeId}/questions/${questionId}/answer`,
     {
-      method: "PATCH",
+      answer,
+    },
+    {
       headers: getHeaders(),
-      body: JSON.stringify({
-        answer,
-      }),
     }
   );
 
-  return await parseResponse(response);
+  logResponse(response);
+  return response.data;
 };
 
 // 質問追加
 const createQuestion = async (episodeId, question) => {
-  const response = await fetch(`${API_BASE_URL}/episodes/${episodeId}/questions`, {
-    method: "POST",
-    headers: getHeaders(),
-    body: JSON.stringify({
+  const response = await axios.post(
+    `${API_BASE_URL}/episodes/${episodeId}/questions`,
+    {
       question,
-    }),
-  });
+    },
+    {
+      headers: getHeaders(),
+    }
+  );
 
-  return await parseResponse(response);
+  logResponse(response);
+  return response.data;
 };
 
 // エピソード削除
 const deleteEpisode = async (id) => {
-  const response = await fetch(`${API_BASE_URL}/episodes/${id}`, {
-    method: "DELETE",
+  const response = await axios.delete(`${API_BASE_URL}/episodes/${id}`, {
     headers: getHeaders(),
   });
 
-  return await parseResponse(response);
+  logResponse(response);
+  return response.data;
 };
 
 export {
