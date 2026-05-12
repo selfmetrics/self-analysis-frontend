@@ -17,7 +17,7 @@ const logResponse = (response) => {
   console.log("APIレスポンス:", response.data);
 };
 
-// エピソード一覧
+// エピソード一覧取得
 const getEpisodes = async () => {
   const response = await axios.get(`${API_BASE_URL}/episodes`, {
     headers: getHeaders(),
@@ -27,7 +27,7 @@ const getEpisodes = async () => {
   return response.data;
 };
 
-// エピソード詳細
+// エピソード詳細取得
 const getEpisodeById = async (id) => {
   const response = await axios.get(`${API_BASE_URL}/episodes/${id}`, {
     headers: getHeaders(),
@@ -37,13 +37,11 @@ const getEpisodeById = async (id) => {
   return response.data;
 };
 
-// 基本質問生成
-const createBasicQuestions = async (episodeId) => {
-  const response = await axios.post(
-    `${API_BASE_URL}/episodes/${episodeId}/questions`,
-    {
-      type: "default",
-    },
+// 基本質問だけ取得
+// 新規ボタンを押した時点ではエピソードを作成しない
+const getBasicQuestions = async () => {
+  const response = await axios.get(
+    `${API_BASE_URL}/episodes/questions/basic`,
     {
       headers: getHeaders(),
     }
@@ -53,10 +51,11 @@ const createBasicQuestions = async (episodeId) => {
   return response.data;
 };
 
-// エピソード + 質問 + 回答を一括保存
-const completeEpisode = async (id, episodeData) => {
+// 新規エピソード保存
+// 保存ボタンを押した時に初めてエピソードを作成する
+const createCompleteEpisode = async (episodeData) => {
   const response = await axios.post(
-    `${API_BASE_URL}/episodes/${id}/complete`,
+    `${API_BASE_URL}/episodes/complete`,
     episodeData,
     {
       headers: getHeaders(),
@@ -67,27 +66,11 @@ const completeEpisode = async (id, episodeData) => {
   return response.data;
 };
 
-// エピソード編集
+// 既存エピソード編集
 const updateEpisode = async (id, episodeData) => {
   const response = await axios.patch(
     `${API_BASE_URL}/episodes/${id}`,
     episodeData,
-    {
-      headers: getHeaders(),
-    }
-  );
-
-  logResponse(response);
-  return response.data;
-};
-
-// 質問の回答編集
-const updateAnswer = async (episodeId, questionId, answer) => {
-  const response = await axios.patch(
-    `${API_BASE_URL}/episodes/${episodeId}/questions/${questionId}/answer`,
-    {
-      answer,
-    },
     {
       headers: getHeaders(),
     }
@@ -113,6 +96,22 @@ const createQuestion = async (episodeId, question) => {
   return response.data;
 };
 
+// 質問の回答編集
+const updateAnswer = async (episodeId, questionId, answer) => {
+  const response = await axios.patch(
+    `${API_BASE_URL}/episodes/${episodeId}/questions/${questionId}/answer`,
+    {
+      answer,
+    },
+    {
+      headers: getHeaders(),
+    }
+  );
+
+  logResponse(response);
+  return response.data;
+};
+
 // エピソード削除
 const deleteEpisode = async (id) => {
   const response = await axios.delete(`${API_BASE_URL}/episodes/${id}`, {
@@ -126,10 +125,10 @@ const deleteEpisode = async (id) => {
 export {
   getEpisodes,
   getEpisodeById,
-  createBasicQuestions,
-  completeEpisode,
+  getBasicQuestions,
+  createCompleteEpisode,
   updateEpisode,
-  updateAnswer,
   createQuestion,
+  updateAnswer,
   deleteEpisode,
 };
