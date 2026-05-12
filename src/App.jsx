@@ -1,14 +1,13 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Routes, Route } from "react-router-dom";
 
-import { getLoginUser, logout } from "./api/authApi";
+import { getLoginUser } from "./api/authApi";
 
 import Login from "./components/Login";
 import OAuthSuccess from "./pages/OAuthSuccess";
 import EpisodePage from "./pages/EpisodePage";
 
 function App() {
-  // ログインユーザーの情報を管理する
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
@@ -23,19 +22,14 @@ function App() {
           return;
         }
 
+        // getLoginUser() は user だけ返す前提
         const loginUser = await getLoginUser();
-        console.log("loginUser:", loginUser);
 
-        const userData =
-          loginUser.data?.user ??
-          loginUser.data ??
-          loginUser.user ??
-          loginUser;
+        console.log("App checkLogin loginUser:", loginUser);
 
-        setUser(userData);
+        setUser(loginUser);
       } catch (error) {
-        console.error("ログインユーザー取得エラー:", error);
-
+        console.error("ログイン確認エラー:", error);
         localStorage.removeItem("token");
         setUser(null);
       } finally {
@@ -46,42 +40,42 @@ function App() {
     checkLogin();
   }, []);
 
-  // ログアウト処理
-  const handleLogout = async () => {
-    await logout();
-    setUser(null);
-  };
+  // OAuthSuccess.jsx からログインユーザーを受け取る
+  const handleOAuthLoginSuccess = useCallback((loginUser) => {
+    console.log("Appが受け取ったuser:", loginUser);
 
-  // ログイン後、OAuthSuccess から呼ばれる処理
-  const handleOAuthLoginSuccess = (loginUser) => {
     setUser(loginUser);
-  };
+    setLoading(false);
+  }, []);
+
+  // ログアウト処理
+  const handleLogout = useCallback(() => {
+    localStorage.removeItem("token");
+    setUser(null);
+  }, []);
 
   if (loading) {
     return <p>ログイン確認中...</p>;
   }
+
+  console.log("現在のAppのuser:", user);
 
   return (
     <Routes>
       <Route
         path="/oauth/success"
         element={
-          <OAuthSuccess
-            onLoginSuccess={handleOAuthLoginSuccess}
-          />
+          <OAuthSuccess onLoginSuccess={handleOAuthLoginSuccess} />
         }
       />
 
       <Route
         path="/*"
         element={
-          !user ? (
-            <Login />
+          user ? (
+            <EpisodePage user={user} onLogout={handleLogout} />
           ) : (
-            <EpisodePage
-              user={user}
-              onLogout={handleLogout}
-            />
+            <Login />
           )
         }
       />
