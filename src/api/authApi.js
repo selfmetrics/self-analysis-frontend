@@ -1,4 +1,6 @@
-const API_BASE_URL = "http://localhost:3000";
+import axios from "axios";
+
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
 const getHeaders = () => {
   const token = localStorage.getItem("token");
@@ -11,36 +13,29 @@ const getHeaders = () => {
 };
 
 // Googleログインページへ移動
-const loginWithGoogle = () => {
+export const loginWithGoogle = () => {
   window.location.href = `${API_BASE_URL}/auth/google`;
 };
 
 // ログイン中ユーザー取得
-const getLoginUser = async () => {
-  const response = await fetch(`${API_BASE_URL}/users/me`, {
-    method: "GET",
+export const getLoginUser = async () => {
+  const response = await axios.get(`${API_BASE_URL}/users/me`, {
     headers: getHeaders(),
   });
 
-  const text = await response.text();
-
   console.log("ログインユーザーAPIステータス:", response.status);
-  console.log("ログインユーザーAPIレスポンス:", text);
+  console.log("ログインユーザーAPIレスポンス:", response.data);
 
-  if (!response.ok) {
-    throw new Error("ログインしていません");
+  const user = response.data.data;
+
+  if (!user) {
+    throw new Error("ユーザー情報がありません");
   }
 
-  return text ? JSON.parse(text) : null;
+  return user;
 };
 
 // ログアウト
-const logout = () => {
+export const logout = async () => {
   localStorage.removeItem("token");
-};
-
-export {
-  loginWithGoogle,
-  getLoginUser,
-  logout,
 };
