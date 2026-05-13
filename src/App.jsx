@@ -1,11 +1,10 @@
 import { useCallback, useEffect, useState } from "react";
 import { Routes, Route } from "react-router-dom";
-
 import { getLoginUser } from "./api/authApi";
-
 import Login from "./components/Login";
 import OAuthSuccess from "./pages/OAuthSuccess";
 import EpisodePage from "./pages/EpisodePage";
+import InterviewQuestionPage from "./pages/InterviewQuestionPage";
 
 function App() {
   const [user, setUser] = useState(null);
@@ -62,24 +61,33 @@ function App() {
 
   return (
     <Routes>
-      <Route
-        path="/oauth/success"
-        element={
-          <OAuthSuccess onLoginSuccess={handleOAuthLoginSuccess} />
-        }
-      />
+  <Route
+    path="/oauth/success"
+    element={<OAuthSuccess onLoginSuccess={handleOAuthLoginSuccess} />}
+  />
 
-      <Route
-        path="/*"
-        element={
-          user ? (
-            <EpisodePage user={user} onLogout={handleLogout} />
-          ) : (
-            <Login />
-          )
-        }
-      />
-    </Routes>
+  <Route
+    path="/interview-questions"
+    element={
+      user ? (
+        <InterviewQuestionPage />
+      ) : (
+        <Login />
+      )
+    }
+  />
+
+  <Route
+    path="/*"
+    element={
+      user ? (
+        <EpisodePage user={user} onLogout={handleLogout} />
+      ) : (
+        <Login />
+      )
+    }
+  />
+</Routes>
   );
 }
 
