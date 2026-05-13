@@ -24,7 +24,7 @@ const getEpisodes = async () => {
   });
 
   logResponse(response);
-  return response.data;
+  return response.data.data;
 };
 
 // エピソード詳細
@@ -34,13 +34,15 @@ const getEpisodeById = async (id) => {
   });
 
   logResponse(response);
-  return response.data;
+  return response.data.data;
 };
 
 // 基本質問生成
-const createBasicQuestions = async (episodeId) => {
+// DBにある基本質問を取得・生成するAPI
+// 基本質問生成
+const createBasicQuestions = async () => {
   const response = await axios.post(
-    `${API_BASE_URL}/episodes/${episodeId}/questions`,
+    `${API_BASE_URL}/episodes`,
     {
       type: "default",
     },
@@ -50,13 +52,13 @@ const createBasicQuestions = async (episodeId) => {
   );
 
   logResponse(response);
-  return response.data;
+  return response.data.data;
 };
 
 // エピソード + 質問 + 回答を一括保存
-const completeEpisode = async (id, episodeData) => {
+const completeEpisode = async (episodeData) => {
   const response = await axios.post(
-    `${API_BASE_URL}/episodes/${id}/complete`,
+    `${API_BASE_URL}/episodes/complete`,
     episodeData,
     {
       headers: getHeaders(),
@@ -64,7 +66,7 @@ const completeEpisode = async (id, episodeData) => {
   );
 
   logResponse(response);
-  return response.data;
+  return response.data.data;
 };
 
 // エピソード編集
@@ -78,25 +80,10 @@ const updateEpisode = async (id, episodeData) => {
   );
 
   logResponse(response);
-  return response.data;
+  return response.data.data;
 };
 
 // 質問の回答編集
-const updateAnswer = async (episodeId, questionId, answer) => {
-  const response = await axios.patch(
-    `${API_BASE_URL}/episodes/${episodeId}/questions/${questionId}/answer`,
-    {
-      answer,
-    },
-    {
-      headers: getHeaders(),
-    }
-  );
-
-  logResponse(response);
-  return response.data;
-};
-
 // 質問追加
 const createQuestion = async (episodeId, question) => {
   const response = await axios.post(
@@ -110,7 +97,7 @@ const createQuestion = async (episodeId, question) => {
   );
 
   logResponse(response);
-  return response.data;
+  return response.data.data;
 };
 
 // エピソード削除
@@ -120,7 +107,7 @@ const deleteEpisode = async (id) => {
   });
 
   logResponse(response);
-  return response.data;
+  return response.data.data;
 };
 
 export {
@@ -129,7 +116,6 @@ export {
   createBasicQuestions,
   completeEpisode,
   updateEpisode,
-  updateAnswer,
   createQuestion,
   deleteEpisode,
 };
