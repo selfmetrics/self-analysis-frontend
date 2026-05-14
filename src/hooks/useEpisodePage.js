@@ -41,9 +41,19 @@ function useEpisodePage({ onLogout }) {
 
   // 質問一覧を取り出す
   const extractQuestions = (episode) => {
-    const questionList = episode.questions ?? [];
+    return episode?.questions ?? [];
+  };
 
-    return Array.isArray(questionList) ? questionList : [];
+  const extractEpisodeId = (episode) => {
+    return episode?.id ?? null;
+  };
+
+  const extractQuestionId = (question) => {
+    if (typeof question !== "object" || question === null) {
+      return null;
+    }
+
+    return question.id ?? null;
   };
 
   // 基本質問生成APIから episodeId を取り出す
@@ -84,7 +94,7 @@ function useEpisodePage({ onLogout }) {
     try {
       const episode = await createBasicQuestions();
 
-      const episodeId = episode.id;
+      const episodeId = extractEpisodeId(episode);
       const questionList = extractQuestions(episode);
 
       setDraftEpisodeId(episodeId);
@@ -94,6 +104,7 @@ function useEpisodePage({ onLogout }) {
       setScreen("form");
     } catch (error) {
       console.error("基本質問取得エラー:", error);
+      alert("基本質問の取得に失敗しました。ブラウザのコンソールを確認してください。");
 
       setDraftEpisodeId(null);
       setQuestions([]);
@@ -112,7 +123,7 @@ const handleSave = async () => {
 
     answers: questions
       .map((question, index) => ({
-        questionId: question.id,
+        questionId: extractQuestionId(question),
         answer: answers[index] ?? "",
       }))
       .filter((item) => item.questionId !== null),
