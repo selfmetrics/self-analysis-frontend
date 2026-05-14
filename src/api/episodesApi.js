@@ -17,6 +17,24 @@ const logResponse = (response) => {
   console.log("APIレスポンス:", response.data);
 };
 
+const getResponseBody = (response) => {
+  return response.data.data ?? response.data;
+};
+
+const toEpisode = (body) => {
+  if (Array.isArray(body)) {
+    return { questions: body };
+  }
+
+  const episode = body?.data ?? body?.episode ?? body;
+
+  return {
+    ...episode,
+    id: episode?.id ?? null,
+    questions: episode?.questions ?? episode?.question ?? [],
+  };
+};
+
 // エピソード一覧
 const getEpisodes = async () => {
   const response = await axios.get(`${API_BASE_URL}/episodes`, {
@@ -24,7 +42,7 @@ const getEpisodes = async () => {
   });
 
   logResponse(response);
-  return response.data.data;
+  return getResponseBody(response);
 };
 
 // エピソード詳細
@@ -34,7 +52,7 @@ const getEpisodeById = async (id) => {
   });
 
   logResponse(response);
-  return response.data.data;
+  return getResponseBody(response);
 };
 
 // 基本質問生成
@@ -52,7 +70,8 @@ const createBasicQuestions = async () => {
   );
 
   logResponse(response);
-  return response.data.data;
+  const body = getResponseBody(response);
+  return toEpisode(body);
 };
 
 // エピソード + 質問 + 回答を一括保存
@@ -66,7 +85,7 @@ const completeEpisode = async (episodeData) => {
   );
 
   logResponse(response);
-  return response.data.data;
+  return getResponseBody(response);
 };
 
 // エピソード編集
@@ -80,7 +99,7 @@ const updateEpisode = async (id, episodeData) => {
   );
 
   logResponse(response);
-  return response.data.data;
+  return getResponseBody(response);
 };
 
 // 質問の回答編集
@@ -97,7 +116,7 @@ const createQuestion = async (episodeId, question) => {
   );
 
   logResponse(response);
-  return response.data.data;
+  return getResponseBody(response);
 };
 
 // エピソード削除
@@ -107,7 +126,7 @@ const deleteEpisode = async (id) => {
   });
 
   logResponse(response);
-  return response.data.data;
+  return getResponseBody(response);
 };
 
 export {
