@@ -52,10 +52,10 @@ function EpisodeForm({
   // key用
   const getQuestionKey = (q, index) => {
     if (typeof q === "object" && q !== null) {
-      return q.id ?? q.questionId ?? q.question_id ?? index;
+      return `question-${q.id ?? q.questionId ?? q.question_id ?? index}-${index}`;
     }
 
-    return index;
+    return `new-question-${index}`;
   };
 
   return (
