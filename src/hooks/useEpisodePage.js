@@ -7,6 +7,7 @@ import {
   createBasicQuestions,
   completeEpisode,
   updateEpisode,
+  updateQuestionAnswer,
   createQuestion,
   deleteEpisode,
 } from "../api/episodesApi";
@@ -32,37 +33,39 @@ function useEpisodePage({ onLogout }) {
   const [detailEpisode, setDetailEpisode] = useState(null);
   const [editId, setEditId] = useState(null);
 
-  // APIレスポンスが response.data / response のどちらでも対応する
-  // 一覧データを取り出す
-  const extractEpisodeList = (body) => {
-    const list = body;
-    return Array.isArray(list) ? list : [];
+  const buildAnswerData = () => {
+    return questions
+      .map((question, index) => {
+        if (question.id == null) {
+          return null;
+        }
+
+        return {
+          questionId: question.id,
+          answer: answers[index] ?? "",
+        };
+      })
+      .filter((item) => item !== null);
   };
 
-  // 質問一覧を取り出す
-  const extractQuestions = (episode) => {
-    return episode?.questions ?? [];
+  const buildNewQuestionData = () => {
+    return questions
+      .map((question, index) => {
+        if (typeof question !== "string") {
+          return null;
+        }
+
+        return {
+          question: question.trim(),
+          answer: answers[index] ?? "",
+        };
+      })
+      .filter((item) => item !== null && item.question !== "");
   };
 
-  const extractEpisodeId = (episode) => {
-    return episode?.id ?? null;
-  };
-
-  const extractQuestionId = (question) => {
-    if (typeof question !== "object" || question === null) {
-      return null;
-    }
-
-    return question.id ?? null;
-  };
-
-  // 基本質問生成APIから episodeId を取り出す
-  // 質問IDを取り出す
-  // 追加された質問データを取り出す
   const fetchEpisodes = async () => {
     try {
-      const episodeList = extractEpisodeList(await getEpisodes());
-      setEpisodes(episodeList);
+      setEpisodes(await getEpisodes());
     } catch (error) {
       console.error("エピソード一覧取得エラー:", error);
       setEpisodes([]);
@@ -93,11 +96,9 @@ function useEpisodePage({ onLogout }) {
 
     try {
       const episode = await createBasicQuestions();
+      const questionList = episode.questions;
 
-      const episodeId = extractEpisodeId(episode);
-      const questionList = extractQuestions(episode);
-
-      setDraftEpisodeId(episodeId);
+      setDraftEpisodeId(episode.id);
       setQuestions(questionList);
       setAnswers(Array(questionList.length).fill(""));
 
@@ -113,38 +114,60 @@ function useEpisodePage({ onLogout }) {
     }
   };
 
-const handleSave = async () => {
-  const episodeData = {
-    date: date,
-    title: title,
-    content: detail,
-    emotion: emotion,
-    emotionIntensity: Number(strength),
+  const handleSave = async () => {
+    const answerData = buildAnswerData();
 
-    answers: questions
-      .map((question, index) => ({
-        questionId: extractQuestionId(question),
-        answer: answers[index] ?? "",
-      }))
-      .filter((item) => item.questionId !== null),
-  };
+    const episodeData = {
+      date: date,
+      title: title,
+      content: detail,
+      emotion: emotion,
+      emotionIntensity: Number(strength),
+      answers: answerData,
+    };
 
-  try {
-    if (editId === null) {
-        await completeEpisode(episodeData);
-    } else {
-      await updateEpisode(editId, episodeData);
+    try {
+      if (editId === null) {
+        const savedEpisode = await completeEpisode(episodeData);
+        const savedEpisodeId = savedEpisode.episodeId ?? savedEpisode.id;
+
+        await Promise.all(
+          buildNewQuestionData().map(async (item) => {
+            const createdQuestion = await createQuestion(
+              savedEpisodeId,
+              item.question
+            );
+
+            if (item.answer.trim() !== "") {
+              await updateQuestionAnswer(
+                savedEpisodeId,
+                createdQuestion.id,
+                item.answer
+              );
+            }
+          })
+        );
+      } else {
+        await updateEpisode(editId, episodeData);
+        await Promise.all(
+          answerData
+            .filter((item) => item.answer.trim() !== "")
+            .map((item) =>
+              updateQuestionAnswer(editId, item.questionId, item.answer)
+            )
+        );
+      }
+
+      await fetchEpisodes();
+
+      resetForm();
+      setScreen("list");
+    } catch (error) {
+      console.error("保存エラー:", error);
+      console.error("保存エラー詳細:", error.response?.data);
+      alert("エピソードの保存に失敗しました。ブラウザのコンソールを確認してください。");
     }
-
-    await fetchEpisodes();
-
-    resetForm();
-    setScreen("list");
-  } catch (error) {
-    console.error("保存エラー:", error);
-    console.error("保存エラー詳細:", error.response?.data);
-  }
-};
+  };
 
   const handleAddQuestion = async () => {
     if (newQuestion.trim() === "") {
@@ -157,24 +180,29 @@ const handleSave = async () => {
       if (targetEpisodeId != null) {
         const createdQuestion = await createQuestion(targetEpisodeId, newQuestion);
 
-        setQuestions([...questions, createdQuestion]);
-        setAnswers([...answers, createdQuestion.answer ?? ""]);
+        setQuestions((currentQuestions) => [
+          ...currentQuestions,
+          createdQuestion,
+        ]);
+        setAnswers((currentAnswers) => [
+          ...currentAnswers,
+          createdQuestion.answer,
+        ]);
       } else {
-        setQuestions([...questions, newQuestion]);
-        setAnswers([...answers, ""]);
+        setQuestions((currentQuestions) => [...currentQuestions, newQuestion]);
+        setAnswers((currentAnswers) => [...currentAnswers, ""]);
       }
 
       setNewQuestion("");
     } catch (error) {
       console.error("質問追加エラー:", error);
+      alert("質問の追加に失敗しました。ブラウザのコンソールを確認してください。");
     }
   };
 
   const handleDetail = async (episode) => {
     try {
       const data = await getEpisodeById(episode.id);
-
-      const questionList = extractQuestions(data);
 
       setDetailEpisode({
         id: data.id,
@@ -183,7 +211,7 @@ const handleSave = async () => {
         content: data.content ?? "",
         emotion: data.emotion,
         emotionIntensity: data.emotionIntensity,
-        questions: questionList,
+        questions: data.questions,
       });
 
       setScreen("detail");
@@ -196,8 +224,6 @@ const handleSave = async () => {
     try {
       const data = await getEpisodeById(episode.id);
 
-      const questionList = extractQuestions(data);
-
       setEditId(data.id);
       setDraftEpisodeId(null);
 
@@ -207,9 +233,9 @@ const handleSave = async () => {
       setEmotion(data.emotion ?? "happy");
       setStrength(data.emotionIntensity ?? 5);
 
-      setQuestions(questionList);
+      setQuestions(data.questions);
       setAnswers(
-        questionList.map((question) => question.answer ?? "")
+        data.questions.map((question) => question.answer ?? "")
       );
 
       setScreen("form");
