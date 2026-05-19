@@ -2,36 +2,43 @@ import axios from "axios";
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
+// 認証トークンがある場合は、全てのエピソードAPIに付与する
+// ログイン後のAPI通信では Authorization ヘッダーが必要になる
 const getHeaders = () => {
   const token = localStorage.getItem("token");
 
   return {
     "Content-Type": "application/json",
     Accept: "application/json",
+    // token が存在する場合だけ Authorization を追加する
     ...(token && { Authorization: `Bearer ${token}` }),
   };
 };
 
+// API通信の結果を確認するためのログ出力
 const logResponse = (response) => {
   console.log("APIステータス:", response.status);
   console.log("APIレスポンス:", response.data);
 };
 
+// バックエンド共通レスポンス { success, message, data } から本体だけ取り出す
 const getResponseBody = (response) => {
-  return response.data.data ?? response.data;
+  return response.data.data;
 };
 
+// 新規作成APIは question で配列を返すため、画面が使う questions にそろえる
 const toEpisode = (body) => {
-  if (Array.isArray(body)) {
-    return { questions: body };
-  }
-
-  const episode = body?.data ?? body?.episode ?? body;
-
   return {
-    ...episode,
-    id: episode?.id ?? null,
-    questions: episode?.questions ?? episode?.question ?? [],
+    ...body,
+    questions: body.questions ?? body.question ?? [],
+  };
+};
+
+// 質問追加APIは answer を返さないため、追加直後の回答欄用に空文字を補う
+const toQuestion = (body) => {
+  return {
+    ...body,
+    answer: body.answer ?? "",
   };
 };
 
@@ -52,12 +59,11 @@ const getEpisodeById = async (id) => {
   });
 
   logResponse(response);
-  return getResponseBody(response);
+  return toEpisode(getResponseBody(response));
 };
 
 // 基本質問生成
 // DBにある基本質問を取得・生成するAPI
-// 基本質問生成
 const createBasicQuestions = async () => {
   const response = await axios.post(
     `${API_BASE_URL}/episodes`,
@@ -103,6 +109,22 @@ const updateEpisode = async (id, episodeData) => {
 };
 
 // 質問の回答編集
+// エピソード本体の更新APIでは回答が保存されないため、回答は専用APIで更新する
+const updateQuestionAnswer = async (episodeId, questionId, answer) => {
+  const response = await axios.patch(
+    `${API_BASE_URL}/episodes/${episodeId}/questions/${questionId}/answer`,
+    {
+      answer,
+    },
+    {
+      headers: getHeaders(),
+    }
+  );
+
+  logResponse(response);
+  return toQuestion(getResponseBody(response));
+};
+
 // 質問追加
 const createQuestion = async (episodeId, question) => {
   const response = await axios.post(
@@ -116,7 +138,7 @@ const createQuestion = async (episodeId, question) => {
   );
 
   logResponse(response);
-  return getResponseBody(response);
+  return toQuestion(getResponseBody(response));
 };
 
 // エピソード削除
@@ -135,6 +157,7 @@ export {
   createBasicQuestions,
   completeEpisode,
   updateEpisode,
+  updateQuestionAnswer,
   createQuestion,
   deleteEpisode,
 };
