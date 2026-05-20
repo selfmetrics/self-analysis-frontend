@@ -141,6 +141,18 @@ const createQuestion = async (episodeId, question) => {
   return toQuestion(getResponseBody(response));
 };
 
+// 質問削除
+const deleteQuestion = async (questionId) => {
+  const response = await axios.delete(
+    `${API_BASE_URL}/episodes/questions/${questionId}`,
+    {
+      headers: getHeaders(),
+    }
+  );
+
+  logResponse(response);
+};
+
 // エピソード削除
 const deleteEpisode = async (id) => {
   const response = await axios.delete(`${API_BASE_URL}/episodes/${id}`, {
@@ -159,5 +171,6 @@ export {
   updateEpisode,
   updateQuestionAnswer,
   createQuestion,
+  deleteQuestion,
   deleteEpisode,
 };
