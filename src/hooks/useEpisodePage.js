@@ -9,6 +9,7 @@ import {
   updateEpisode,
   updateQuestionAnswer,
   createQuestion,
+  deleteQuestion,
   deleteEpisode,
 } from "../api/episodesApi";
 
@@ -200,6 +201,31 @@ function useEpisodePage({ onLogout }) {
     }
   };
 
+  const handleDeleteQuestion = async (index) => {
+    const targetQuestion = questions[index];
+
+    if (!window.confirm("この質問を削除しますか？")) {
+      return;
+    }
+
+    try {
+      if (editId !== null && typeof targetQuestion === "object") {
+        await deleteQuestion(targetQuestion.id);
+      }
+
+      setQuestions((currentQuestions) =>
+        currentQuestions.filter((_, questionIndex) => questionIndex !== index)
+      );
+      setAnswers((currentAnswers) =>
+        currentAnswers.filter((_, answerIndex) => answerIndex !== index)
+      );
+    } catch (error) {
+      console.error("質問削除エラー:", error);
+      console.error("質問削除エラー詳細:", error.response?.data);
+      alert("質問の削除に失敗しました。追加した質問だけ削除できます。");
+    }
+  };
+
   const handleDetail = async (episode) => {
     try {
       const data = await getEpisodeById(episode.id);
@@ -297,6 +323,7 @@ function useEpisodePage({ onLogout }) {
     handleNew,
     handleSave,
     handleAddQuestion,
+    handleDeleteQuestion,
     handleDetail,
     handleEdit,
     handleDelete,
