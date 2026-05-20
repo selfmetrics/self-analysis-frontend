@@ -25,6 +25,7 @@ function EpisodeForm({
   newQuestion,
   setNewQuestion,
   onAddQuestion,
+  onDeleteQuestion,
 
   // 保存・更新ボタンを押したときに実行する関数
   onSave,
@@ -132,6 +133,10 @@ function EpisodeForm({
               setAnswers(newAnswers);
             }}
           />
+
+          <button type="button" onClick={() => onDeleteQuestion(index)}>
+            削除
+          </button>
         </div>
       ))}
 
