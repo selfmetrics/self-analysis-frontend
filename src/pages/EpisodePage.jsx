@@ -33,6 +33,7 @@ function EpisodePage({ user, onLogout }) {
     handleNew,
     handleSave,
     handleAddQuestion,
+    handleDeleteQuestion,
     handleDetail,
     handleEdit,
     handleDelete,
@@ -62,6 +63,7 @@ function EpisodePage({ user, onLogout }) {
         newQuestion={newQuestion}
         setNewQuestion={setNewQuestion}
         onAddQuestion={handleAddQuestion}
+        onDeleteQuestion={handleDeleteQuestion}
         onSave={handleSave}
         onBack={goList}
       />
