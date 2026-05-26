@@ -2,6 +2,8 @@ import axios from "axios";
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
+// APIリクエストに共通に使用するヘッダを作成
+//　ログイントークンがある場合は、Authorizationヘッダーに一緒に入れる
 const getHeaders = () => {
   const token = localStorage.getItem("token");
 
@@ -12,61 +14,12 @@ const getHeaders = () => {
   };
 };
 
-// 面接質問一覧取得
+
+// DBに保存されたインタビュー質問のリストを照会
 export const getInterviewQuestions = async () => {
   const response = await axios.get(`${API_BASE_URL}/interview-questions`, {
     headers: getHeaders(),
   });
-
-  return response.data;
-};
-
-// 面接質問詳細取得
-export const getInterviewQuestionDetail = async (questionId) => {
-  const response = await axios.get(
-    `${API_BASE_URL}/interview-questions/${questionId}`,
-    {
-      headers: getHeaders(),
-    }
-  );
-
-  return response.data;
-};
-
-// 面接質問作成
-export const createInterviewQuestion = async (questionData) => {
-  const response = await axios.post(
-    `${API_BASE_URL}/interview-questions`,
-    questionData,
-    {
-      headers: getHeaders(),
-    }
-  );
-
-  return response.data;
-};
-
-// 面接質問の回答修正
-export const updateInterviewQuestionAnswer = async (questionId, answerData) => {
-  const response = await axios.patch(
-    `${API_BASE_URL}/interview-questions/${questionId}`,
-    answerData,
-    {
-      headers: getHeaders(),
-    }
-  );
-
-  return response.data;
-};
-
-// 面接質問削除
-export const deleteInterviewQuestion = async (questionId) => {
-  const response = await axios.delete(
-    `${API_BASE_URL}/interview-questions/${questionId}`,
-    {
-      headers: getHeaders(),
-    }
-  );
 
   return response.data;
 };
