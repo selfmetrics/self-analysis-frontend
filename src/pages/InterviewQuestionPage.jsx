@@ -48,80 +48,15 @@ const mergeQuestion = (baseQuestion, detailQuestion) => {
   );
 };
 
-// 質問IDのキー名がAPI側で変わっても表示できるようにする。
-const getQuestionId = (question) => {
-  return (
-    question.id ??
-    question.questionId ??
-    question.question_id ??
-    question.interviewQuestionId ??
-    question.interview_question_id ??
-    null
-  );
-};
+// 質問ID
+const getQuestionId = (question) => question.questionId;
 
-// 質問本文として使えそうな値を取り出す。
-const getQuestionText = (question) => {
-  return (
-    question.question ??
-    question.content ??
-    question.text ??
-    question.title ??
-    ""
-  );
-};
+// 質問
+const getQuestionText = (question) => question.question;
 
-// 回答が question.answer ではなく、InterviewAnswer 側にネストされて返る場合も拾う。
+// 回答
 const getAnswerText = (question) => {
-  const nestedAnswer =
-    question.interviewAnswer ??
-    question.InterviewAnswer ??
-    question.answerData ??
-    question.answer_data;
-
-  const answerList =
-    question.interviewAnswers ??
-    question.InterviewAnswers ??
-    question.answers ??
-    question.Answers;
-
-  return (
-    question.answer ??
-    question.answerText ??
-    question.answer_text ??
-    nestedAnswer?.answer ??
-    nestedAnswer?.answerText ??
-    nestedAnswer?.answer_text ??
-    answerList?.[0]?.answer ??
-    answerList?.[0]?.answerText ??
-    answerList?.[0]?.answer_text ??
-    ""
-  );
-};
-
-// 作成日時のキー名がAPI側で違っても表示できるようにする。
-const getCreatedAt = (question) => {
-  const rawCreatedAt =
-    question.createdAt ??
-    question.created_at ??
-    question.createAt ??
-    question.create_at ??
-    question.createdDate ??
-    question.created_date ??
-    question.createdTime ??
-    question.created_time;
-
-  if (!rawCreatedAt) {
-    return "-";
-  }
-
-  const date = new Date(rawCreatedAt);
-
-  if (Number.isNaN(date.getTime())) {
-    return String(rawCreatedAt);
-  }
-
-  return date.toLocaleString();
+  return question.answer ?? "";
 };
 
 function InterviewQuestionPage() {
