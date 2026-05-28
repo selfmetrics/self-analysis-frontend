@@ -7,30 +7,18 @@ import {
   updateInterviewQuestionAnswer,
 } from "../api/interviewQuestionApi";
 
-// APIレスポンスの形が少し違っても、質問配列だけ取り出せるようにする。
+// APIレスポンスが { data: [...] } の場合に質問配列を取り出す。
 const extractQuestions = (body) => {
-  const data = body?.data ?? body;
-
-  if (Array.isArray(data)) {
-    return data;
-  }
-
-  return (
-    data?.questions ??
-    data?.question ??
-    data?.interviewQuestions ??
-    data?.interview_questions ??
-    []
-  );
+  return Array.isArray(body?.data) ? body.data : [];
 };
 
-// 詳細APIのレスポンスから質問オブジェクトだけ取り出す。
+// 詳細APIのレスポンスから質問オブジェクトを取り出す。
 const extractQuestion = (body) => {
   const data = body?.data ?? body;
   return data?.question && typeof data.question === "object" ? data.question : data;
 };
 
-// 詳細APIの値で一覧APIの値を補完する。undefined/null で元の値を消さない。
+// 詳細APIの値で一覧APIの質問データを補完する。
 const mergeQuestion = (baseQuestion, detailQuestion) => {
   if (!detailQuestion || typeof detailQuestion !== "object") {
     return baseQuestion;
@@ -48,16 +36,9 @@ const mergeQuestion = (baseQuestion, detailQuestion) => {
   );
 };
 
-// 質問ID
 const getQuestionId = (question) => question.questionId;
-
-// 質問
 const getQuestionText = (question) => question.question;
-
-// 回答
-const getAnswerText = (question) => {
-  return question.answer ?? "";
-};
+const getAnswerText = (question) => question.answer ?? "";
 
 function InterviewQuestionPage() {
   const navigate = useNavigate();
@@ -69,7 +50,6 @@ function InterviewQuestionPage() {
   const [savingId, setSavingId] = useState(null);
   const [errorMessage, setErrorMessage] = useState("");
 
-  // 一覧APIだけで回答が取れない場合があるので、詳細APIで各質問の回答を補完する。
   const fetchQuestions = useCallback(async () => {
     try {
       setLoading(true);
@@ -118,7 +98,6 @@ function InterviewQuestionPage() {
     }
   }, []);
 
-  // 画面を開いたときにDBから質問一覧を照会する。
   useEffect(() => {
     fetchQuestions();
   }, [fetchQuestions]);
@@ -141,7 +120,6 @@ function InterviewQuestionPage() {
     }));
   };
 
-  // 入力した回答をDBに保存する。
   const handleSaveAnswer = async (question) => {
     const questionId = getQuestionId(question);
     const questionText = getQuestionText(question);
@@ -178,7 +156,6 @@ function InterviewQuestionPage() {
 
       <header>
         <h1>面接質問一覧</h1>
-        <p>未回答の質問には回答できます。回答済みの質問は回答内容を表示します。</p>
       </header>
 
       {loading && <p>読み込み中...</p>}
@@ -205,12 +182,7 @@ function InterviewQuestionPage() {
 
             <h2>{questionText || "質問内容なし"}</h2>
 
-            {isAnswered ? (
-              <p>
-                <strong>回答: </strong>
-                {savedAnswer}
-              </p>
-            ) : isAnswering ? (
+            {isAnswering ? (
               <>
                 <label htmlFor={`answer-${questionId ?? index}`}>回答</label>
                 <br />
@@ -231,6 +203,16 @@ function InterviewQuestionPage() {
                   disabled={questionId === null || savingId === questionId}
                 >
                   {savingId === questionId ? "保存中..." : "保存"}
+                </button>
+              </>
+            ) : isAnswered ? (
+              <>
+                <p>
+                  <strong>回答: </strong>
+                  {savedAnswer}
+                </p>
+                <button type="button" onClick={() => handleStartAnswer(question)}>
+                  編集する
                 </button>
               </>
             ) : (
