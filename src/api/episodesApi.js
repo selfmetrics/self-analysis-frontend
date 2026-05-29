@@ -30,6 +30,8 @@ const getResponseBody = (response) => {
 const toEpisode = (body) => {
   return {
     ...body,
+    date: body.date ?? body.eventDate,
+    emotionIntensity: body.emotionIntensity ?? body.emotionScore,
     questions: body.questions ?? body.question ?? [],
   };
 };
@@ -43,13 +45,14 @@ const toQuestion = (body) => {
 };
 
 // エピソード一覧
-const getEpisodes = async () => {
+const getEpisodes = async (params = {}) => {
   const response = await axios.get(`${API_BASE_URL}/episodes`, {
     headers: getHeaders(),
+    params,
   });
 
   logResponse(response);
-  return getResponseBody(response);
+  return getResponseBody(response).map(toEpisode);
 };
 
 // エピソード詳細
