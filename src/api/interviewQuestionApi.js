@@ -35,6 +35,20 @@ export const getInterviewQuestionDetail = async (questionId) => {
 };
 
 // 指定した面接質問の回答を更新する。
+export const createInterviewQuestion = async (question) => {
+  const response = await axios.post(
+    `${API_BASE_URL}/interview-questions`,
+    {
+      question,
+    },
+    {
+      headers: getHeaders(),
+    }
+  );
+
+  return response.data;
+};
+
 export const updateInterviewQuestionAnswer = async (questionId, questionData) => {
   const response = await axios.patch(
     `${API_BASE_URL}/interview-questions/${questionId}`,
