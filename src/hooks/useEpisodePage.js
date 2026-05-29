@@ -52,6 +52,7 @@ function useEpisodePage({ onLogout }) {
 
   // エピソード一覧を管理する
   const [episodes, setEpisodes] = useState([]);
+  const [selectedMonth, setSelectedMonth] = useState("");
 
   // 詳細画面で表示するエピソード情報
   const [detailEpisode, setDetailEpisode] = useState(null);
@@ -98,11 +99,25 @@ function useEpisodePage({ onLogout }) {
       .filter((item) => item !== null && item.question !== "");
   };
 
+  const getMonthRange = (month) => {
+    if (!month) {
+      return {};
+    }
+
+    const [year, monthNumber] = month.split("-").map(Number);
+    const lastDay = new Date(year, monthNumber, 0).getDate();
+
+    return {
+      startDate: `${month}-01`,
+      endDate: `${month}-${String(lastDay).padStart(2, "0")}`,
+    };
+  };
+
   // エピソード一覧を取得する処理
   const fetchEpisodes = async () => {
     try {
       // APIからエピソード一覧を取得してstateに保存する
-      setEpisodes(await getEpisodes());
+      setEpisodes(await getEpisodes(getMonthRange(selectedMonth)));
     } catch (error) {
       console.error("エピソード一覧取得エラー:", error);
 
@@ -114,7 +129,7 @@ function useEpisodePage({ onLogout }) {
   // このHookが最初に使われた時に、エピソード一覧を取得する
   useEffect(() => {
     fetchEpisodes();
-  }, []);
+  }, [selectedMonth]);
 
   // 入力フォームを初期状態に戻す処理
   const resetForm = () => {
@@ -171,6 +186,9 @@ function useEpisodePage({ onLogout }) {
   const handleSave = async () => {
     // 既存質問に対する回答データを作る
     const answerData = buildAnswerData();
+    const enteredAnswerData = answerData.filter(
+      (item) => item.answer.trim() !== ""
+    );
 
     // APIに送るエピソードデータを作る
     const episodeData = {
@@ -179,7 +197,7 @@ function useEpisodePage({ onLogout }) {
       content: detail,
       emotion: emotion,
       emotionIntensity: Number(strength),
-      answers: answerData,
+      answers: enteredAnswerData,
     };
 
     try {
@@ -215,11 +233,9 @@ function useEpisodePage({ onLogout }) {
 
         // 回答が入力されているものだけ更新する
         await Promise.all(
-          answerData
-            .filter((item) => item.answer.trim() !== "")
-            .map((item) =>
-              updateQuestionAnswer(editId, item.questionId, item.answer)
-            )
+          enteredAnswerData.map((item) =>
+            updateQuestionAnswer(editId, item.questionId, item.answer)
+          )
         );
       }
 
@@ -406,6 +422,17 @@ function useEpisodePage({ onLogout }) {
   };
 
   // EpisodePage.jsx などで使えるように、stateと関数を返す
+  const getEpisodeDate = (episode) => {
+    return episode.date ?? episode.eventDate ?? "";
+  };
+
+  const filteredEpisodes =
+    selectedMonth === ""
+      ? episodes
+      : episodes.filter((episode) => {
+          return String(getEpisodeDate(episode)).slice(0, 7) === selectedMonth;
+        });
+
   return {
     screen,
 
@@ -427,7 +454,9 @@ function useEpisodePage({ onLogout }) {
     newQuestion,
     setNewQuestion,
 
-    episodes,
+    episodes: filteredEpisodes,
+    selectedMonth,
+    setSelectedMonth,
     detailEpisode,
     editId,
 
