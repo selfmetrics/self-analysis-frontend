@@ -4,21 +4,19 @@ import { useNavigate } from "react-router-dom";
 import {
   getInterviewQuestions,
   getInterviewQuestionDetail,
+  createInterviewQuestion,
   updateInterviewQuestionAnswer,
 } from "../api/interviewQuestionApi";
 
-// APIレスポンスが { data: [...] } の場合に質問配列を取り出す。
 const extractQuestions = (body) => {
   return Array.isArray(body?.data) ? body.data : [];
 };
 
-// 詳細APIのレスポンスから質問オブジェクトを取り出す。
 const extractQuestion = (body) => {
   const data = body?.data ?? body;
   return data?.question && typeof data.question === "object" ? data.question : data;
 };
 
-// 詳細APIの値で一覧APIの質問データを補完する。
 const mergeQuestion = (baseQuestion, detailQuestion) => {
   if (!detailQuestion || typeof detailQuestion !== "object") {
     return baseQuestion;
@@ -46,8 +44,11 @@ function InterviewQuestionPage() {
   const [questions, setQuestions] = useState([]);
   const [answers, setAnswers] = useState({});
   const [answeringId, setAnsweringId] = useState(null);
+  const [newQuestion, setNewQuestion] = useState("");
   const [loading, setLoading] = useState(false);
+  const [creating, setCreating] = useState(false);
   const [savingId, setSavingId] = useState(null);
+  const [deletingId, setDeletingId] = useState(null);
   const [errorMessage, setErrorMessage] = useState("");
 
   const fetchQuestions = useCallback(async () => {
@@ -120,6 +121,29 @@ function InterviewQuestionPage() {
     }));
   };
 
+  const handleCreateQuestion = async () => {
+    const questionText = newQuestion.trim();
+
+    if (questionText === "") {
+      return;
+    }
+
+    try {
+      setCreating(true);
+      setErrorMessage("");
+
+      await createInterviewQuestion(questionText);
+
+      setNewQuestion("");
+      await fetchQuestions();
+    } catch (error) {
+      console.error("面接質問の追加に失敗しました:", error);
+      setErrorMessage("面接質問を追加できませんでした。");
+    } finally {
+      setCreating(false);
+    }
+  };
+
   const handleSaveAnswer = async (question) => {
     const questionId = getQuestionId(question);
     const questionText = getQuestionText(question);
@@ -148,6 +172,37 @@ function InterviewQuestionPage() {
     }
   };
 
+  const handleDeleteAnswer = async (question) => {
+    const questionId = getQuestionId(question);
+
+    if (questionId === null) {
+      alert("質問IDを確認できませんでした。");
+      return;
+    }
+
+    if (!window.confirm("この回答を削除しますか？")) {
+      return;
+    }
+
+    try {
+      setDeletingId(questionId);
+      setErrorMessage("");
+
+      await updateInterviewQuestionAnswer(questionId, {
+        question: getQuestionText(question),
+        answer: "",
+      });
+
+      setAnsweringId(null);
+      await fetchQuestions();
+    } catch (error) {
+      console.error("回答の削除に失敗しました:", error);
+      setErrorMessage("回答を削除できませんでした。");
+    } finally {
+      setDeletingId(null);
+    }
+  };
+
   return (
     <main>
       <button type="button" onClick={() => navigate("/")}>
@@ -157,6 +212,23 @@ function InterviewQuestionPage() {
       <header>
         <h1>面接質問一覧</h1>
       </header>
+
+      <section>
+        <h2>面接質問追加</h2>
+        <input
+          type="text"
+          value={newQuestion}
+          onChange={(event) => setNewQuestion(event.target.value)}
+          placeholder="追加したい面接質問を入力"
+        />
+        <button
+          type="button"
+          onClick={handleCreateQuestion}
+          disabled={creating || newQuestion.trim() === ""}
+        >
+          {creating ? "追加中..." : "追加"}
+        </button>
+      </section>
 
       {loading && <p>読み込み中...</p>}
 
@@ -213,6 +285,13 @@ function InterviewQuestionPage() {
                 </p>
                 <button type="button" onClick={() => handleStartAnswer(question)}>
                   編集する
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleDeleteAnswer(question)}
+                  disabled={questionId === null || deletingId === questionId}
+                >
+                  {deletingId === questionId ? "削除中..." : "削除"}
                 </button>
               </>
             ) : (
