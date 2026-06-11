@@ -39,15 +39,7 @@ function EpisodeForm({
       return q;
     }
 
-    return (
-      q.question ??
-      q.content ??
-      q.text ??
-      q.body ??
-      q.questionText ??
-      q.question_text ??
-      ""
-    );
+    return q.question ?? ""
   };
 
   // key用
