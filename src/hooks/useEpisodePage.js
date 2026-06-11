@@ -19,6 +19,14 @@ import {
   deleteEpisode,
 } from "../api/episodesApi";
 
+const getCurrentMonth = () => {
+  const today = new Date();
+  const year = today.getFullYear();
+  const month = String(today.getMonth() + 1).padStart(2, "0");
+
+  return `${year}-${month}`;
+};
+
 // EpisodePageで使う処理やstateをまとめたカスタムHook
 function useEpisodePage({ onLogout }) {
   // 他のページへ移動するために使う
@@ -52,7 +60,7 @@ function useEpisodePage({ onLogout }) {
 
   // エピソード一覧を管理する
   const [episodes, setEpisodes] = useState([]);
-  const [selectedMonth, setSelectedMonth] = useState("");
+  const [selectedMonth, setSelectedMonth] = useState(getCurrentMonth);
 
   // 詳細画面で表示するエピソード情報
   const [detailEpisode, setDetailEpisode] = useState(null);
