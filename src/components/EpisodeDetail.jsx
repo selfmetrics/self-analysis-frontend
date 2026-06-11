@@ -4,12 +4,19 @@ function EpisodeDetail({ episode, onBack }) {
   }
 
   const questions = episode.questions || [];
+  const formatDate = (date) => {
+    if (!date) {
+      return "";
+    }
+
+    return String(date).slice(0, 10);
+  };
 
   return (
     <div>
       <button onClick={onBack}>戻る</button>
 
-      <h1>日付: {episode.date}</h1>
+      <h1>日付: {formatDate(episode.date)}</h1>
       <p>タイトル: {episode.title}</p>
       <p>内容: {episode.content}</p>
       <p>感情: {episode.emotion}</p>
