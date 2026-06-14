@@ -90,10 +90,18 @@ function EpisodeForm({
 
       <span>感情</span>
       <br />
-      <button type="button" onClick={() => setEmotion("happy")}>
+      <button
+        type="button"
+        onClick={() => setEmotion("happy")}
+        aria-pressed={emotion === "happy"}
+      >
         😊
       </button>
-      <button type="button" onClick={() => setEmotion("sad")}>
+      <button
+        type="button"
+        onClick={() => setEmotion("sad")}
+        aria-pressed={emotion === "sad"}
+      >
         😢
       </button>
       <br />
