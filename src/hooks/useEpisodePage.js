@@ -136,7 +136,29 @@ function useEpisodePage({ onLogout }) {
 
   // このHookが最初に使われた時に、エピソード一覧を取得する
   useEffect(() => {
-    fetchEpisodes();
+    let shouldIgnore = false;
+
+    const loadEpisodes = async () => {
+      try {
+        const episodeList = await getEpisodes(getMonthRange(selectedMonth));
+
+        if (!shouldIgnore) {
+          setEpisodes(episodeList);
+        }
+      } catch (error) {
+        console.error("エピソード一覧取得エラー:", error);
+
+        if (!shouldIgnore) {
+          setEpisodes([]);
+        }
+      }
+    };
+
+    loadEpisodes();
+
+    return () => {
+      shouldIgnore = true;
+    };
   }, [selectedMonth]);
 
   // 入力フォームを初期状態に戻す処理
